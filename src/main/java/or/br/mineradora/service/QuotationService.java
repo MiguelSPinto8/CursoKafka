@@ -28,16 +28,18 @@ public class QuotationService {
     @Inject
     KafkaEvents kafkaEvents;
 
-    public void getCurrencyPrice(){
-
+    public void getCurrencyPrice() {
         CurrencyPriceDTO currencyPriceInfo = currencyPriceClient.getPriceByPair("USD-BRL");
-
-        if(updateCurrentInfoPrice(currencyPriceInfo)){
-            kafkaEvents.sendNewKafkaEvent(QuotationDTO
-                    .builder()
-                    .currencyPrice(new BigDecimal(currencyPriceInfo.getUSDBRL().getBid()))
-                    .date(new Date())
-                    .build());
+        if (currencyPriceInfo != null && currencyPriceInfo.getUSDBRL() != null) {
+            if (updateCurrentInfoPrice(currencyPriceInfo)) {
+                kafkaEvents.sendNewKafkaEvent(QuotationDTO
+                        .builder()
+                        .currencyPrice(new BigDecimal(currencyPriceInfo.getUSDBRL().getBid()))
+                        .date(new Date())
+                        .build());
+            }
+        } else {
+            System.err.println("CurrencyPriceDTO ou USDBRL está null.");
         }
     }
 

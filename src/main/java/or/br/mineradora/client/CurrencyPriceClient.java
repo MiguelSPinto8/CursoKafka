@@ -8,7 +8,7 @@ import or.br.mineradora.dto.CurrencyPriceDTO;
 import org.eclipse.microprofile.rest.client.inject.RegisterRestClient;
 
 @Path("/last")
-@RegisterRestClient(baseUri = "https://economia.awsomeapi.com.br")
+@RegisterRestClient(baseUri = "https://economia.awesomeapi.com.br")
 @ApplicationScoped
 public interface CurrencyPriceClient {
 
