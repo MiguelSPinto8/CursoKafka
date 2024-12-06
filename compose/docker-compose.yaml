@@ -1,0 +1,149 @@
+version: '3.7'
+
+services:
+
+  # PostgreSQL Service
+
+  postgres:
+
+    image: postgres:latest
+
+    container_name: trading_container
+
+    environment:
+
+      POSTGRES_USER: trading
+
+      POSTGRES_PASSWORD: trading
+
+      POSTGRES_DB: tradingdb
+
+    networks:
+
+      quarkus-net:
+
+        ipv4_address: 172.30.0.2
+
+  # PgAdmin Service
+
+  pgadmin:
+
+    image: dpage/pgadmin4
+
+    container_name: pgadmin_container
+
+    environment:
+
+      PGADMIN_DEFAULT_EMAIL: trading@trading.com # Set your admin email
+
+      PGADMIN_DEFAULT_PASSWORD: trading          # Set your admin password
+
+    ports:
+
+      - "5050:80"
+
+    networks:
+
+      quarkus-net:
+
+        ipv4_address: 172.30.0.3
+
+    depends_on:
+
+      - postgres
+
+  kafka:
+
+    image: "bitnami/kafka:3.8"
+
+    container_name: kafka
+
+    hostname: kafka
+
+    networks:
+
+      quarkus-net:
+
+        ipv4_address: 172.30.0.5
+
+    environment:
+
+      - ALLOW_ANONYMOUS_LOGIN=yes
+
+      - KAFKA_ENABLE_KRAFT=yes
+
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=kraft:PLAINTEXT,CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+
+      - KAFKA_BROKER_ID=1
+
+      - KAFKA_CFG_NODE_ID=1
+
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@kafka-1:9094
+
+      - ALLOW_PLAINTEXT_LISTENER=yes
+
+      - KAFKA_KRAFT_CLUSTER_ID=MkU3OEVBNTcwNTJENDM2Qk
+
+      - KAFKA_CFG_KRAFT_REPLICATION_FACTOR=3
+
+      - KAFKA_CFG_ADVERTISED_LISTENERS=kraft://kafka-1:9093,INTERNAL://kafka-1:9092,EXTERNAL://172.18.0.2:9502
+
+      - KAFKA_CFG_LISTENERS=kraft://:9093,CONTROLLER://kafka-1:9094,INTERNAL://:9092,EXTERNAL://:9502
+
+      - KAFKA_CFG_INTER_BROKER_LISTENER_NAME=INTERNAL
+
+      - KAFKA_CFG_DEFAULT_REPLICATION_FACTOR=1
+
+    ports:
+
+      - "9101:9092"  # Internal listener
+
+      - "9502:9093"  # External listener for KRaft (external access)
+
+      - "9103:9094"  # Controller listener
+
+  # Kafka UI Service
+
+  kafka-ui:
+
+    image: provectuslabs/kafka-ui
+
+    container_name: kafka-ui
+
+    networks:
+
+      quarkus-net: # Corrected network
+
+        ipv4_address: 172.30.0.6
+
+    ports:
+
+      - "9093:8080" # Fixed port mapping for Kafka UI
+
+    restart: always
+
+    environment:
+
+      - KAFKA_CLUSTERS_0_NAME=trading-cluster
+
+      - KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS=172.30.0.5:9092
+
+    depends_on:
+
+      - kafka
+
+networks:
+
+  quarkus-net:
+
+    driver: bridge
+
+    ipam:
+
+      config:
+
+        - subnet: 172.30.0.0/24
